@@ -175,18 +175,63 @@ async def get_object_info(request):
 
 #### 2.2 New Response Format
 
+Old format:
+
 ```javascript
 {
     "CheckpointLoader": {
         "input": {
             "required": {
-                "ckpt_name": {
-                    "type": "FILE_COMBO",
-                    "config": {
+                "ckpt_name": [[
+                    "file1",
+                    "file2",
+                    ...
+                    "fileN",
+                ]],
+                "combo_input": [[
+                    "option1",
+                    "option2",
+                    ...
+                    "optionN",
+                ], {
+                    "default": "option1",
+                    "tooltip": "Processing mode"
+                }],
+            },
+            "optional": {}
+        },
+        "output": ["MODEL"],
+        "output_name": ["model"],
+        "output_is_list": [false],
+        "output_tooltip": ["The loaded model"],
+        "output_node": false,
+        "category": "loaders"
+    }
+}
+```
+
+New format:
+
+```javascript
+{
+    "CheckpointLoader": {
+        "input": {
+            "required": {
+                "ckpt_name": [
+                    "FILE_COMBO",
+                    {
                         "folder_path": "checkpoints",
                         "filter_ext": [".ckpt", ".safetensors"]
                     }
-                }
+                ],
+                "combo_input": [
+                    "COMBO",
+                    {
+                        "options": ["option1", "option2", ... "optionN"],
+                        "default": "option1",
+                        "tooltip": "Processing mode"
+                    }
+                ],
             },
             "optional": {}
         },
