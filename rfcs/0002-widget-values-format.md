@@ -9,6 +9,8 @@ This RFC proposes a new format for handling widget values in ComfyUI workflows b
 
 ## Basic example
 
+![image](https://github.com/user-attachments/assets/e36113a9-20d6-406a-9a83-209c86b91107)
+
 Current format node serialization format:
 
 ```json
@@ -24,7 +26,16 @@ Current format node serialization format:
     { "name": "model", "type": "MODEL", "link": 1 },
     { "name": "positive", "type": "CONDITIONING", "link": 4 },
     { "name": "negative", "type": "CONDITIONING", "link": 6 },
-    { "name": "latent_image", "type": "LATENT", "link": 2 }
+    { "name": "latent_image", "type": "LATENT", "link": 2 },
+    // Seed input converted from widget
+    {
+      "name": "seed",
+      "type": "INT",
+      "link": null,
+      "widget": {
+        "name": "seed"
+      }
+    }
   ],
   "outputs": [{ "name": "LATENT", "type": "LATENT", "links": [7], "slot_index": 0 }],
   "properties": {},
@@ -48,7 +59,8 @@ Proposed format:
     { "name": "positive", "type": "CONDITIONING", "link": 4 },
     { "name": "negative", "type": "CONDITIONING", "link": 6 },
     { "name": "latent_image", "type": "LATENT", "link": 2 },
-    { "name": "seed", "type": "INT", "value": 156680208700286 },
+    // Seed input converted from widget
+    { "name": "seed", "type": "INT", "value": 156680208700286, "link": null },
     { "name": "denoise", "type": "FLOAT", "value": 1.0 },
     { "name": "steps", "type": "INT", "value": 20 },
     { "name": "cfg", "type": "FLOAT", "value": 8 },
@@ -257,24 +269,27 @@ The transition to the new widget values format will be implemented through a pha
     - Grace period of 2-3 releases before removing `widgets_values` support
 
 4. **Ecosystem Impact**
-   - Code search shows only ~10 custom node repositories directly accessing `widget_values`
-   - ComfyUI team can directly contribute fixes to these repositories
-   - API clients and workflow manipulation tools will need modification
-   - Web UI extensions may require updates for the new format
-   - Compatibility layer will be provided during transition:
-     ```javascript
-     get widgets_values() {
-       console.warn("Deprecated: accessing widgets_values directly. Please migrate to input values.");
-       return this.inputs
-         .filter(input => input.value !== undefined)
-         .map(input => input.value);
-     }
-     ```
+
+  - Code search shows only ~10 custom node repositories directly accessing `widget_values`
+  - ComfyUI team can directly contribute fixes to these repositories
+  - API clients and workflow manipulation tools will need modification
+  - Web UI extensions may require updates for the new format
+  - Compatibility layer will be provided during transition:
+
+    ```javascript
+    get widgets_values() {
+      console.warn("Deprecated: accessing widgets_values directly. Please migrate to input values.");
+      return this.inputs
+        .filter(input => input.value !== undefined)
+        .map(input => input.value);
+    }
+    ```
 
 5. **Timeline**
-   - Beta release with dual format support
-   - 3-month transition period with both formats supported
-   - Full migration to 1.1 format in next major version
+
+  - Beta release with dual format support
+  - 3-month transition period with both formats supported
+  - Full migration to 1.1 format in next major version
 
 ## Unresolved questions
 
