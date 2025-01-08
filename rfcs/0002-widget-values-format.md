@@ -225,7 +225,7 @@ This approach ensures that even unknown nodes remain editable and maintain their
 
 Despite these drawbacks, the benefits of improved maintainability, type safety, and self-documentation likely outweigh these concerns in the long term.
 
-# Adoption strategy
+## Adoption strategy
 
 The transition to the new widget values format will be implemented through a phased approach to ensure smooth adoption:
 
@@ -276,6 +276,6 @@ The transition to the new widget values format will be implemented through a pha
    - 3-month transition period with both formats supported
    - Full migration to 1.1 format in next major version
 
-# Unresolved questions
+## Unresolved questions
 
 TBD
