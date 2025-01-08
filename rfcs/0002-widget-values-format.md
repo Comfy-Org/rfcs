@@ -5,6 +5,8 @@
 
 ## Summary
 
+This RFC proposes a new format for handling widget values in ComfyUI workflows by integrating them directly into the node inputs array instead of storing them in a separate `widgets_values` array. The new format improves type safety, maintainability, and self-documentation of workflows by making each widget value a named, typed input with explicit metadata. This change will require a version bump in the workflow schema from 1.0 to 1.1, but includes backward compatibility measures to ensure a smooth transition for existing workflows and custom nodes.
+
 ## Basic example
 
 Current format node serialization format:
