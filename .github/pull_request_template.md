@@ -8,23 +8,17 @@
 ## Links
 
 <!--
-  Link to a GitHub-rendered version of your RFC, e.g.
-  https://github.com/<USERNAME>/rfcs/blob/<BRANCH>/rfcs/0000-my-proposal.md
-  You can find this link by navigating to this file on your branch.
+  Both links below will be automatically filled in when you create the PR.
+  You do not need to modify this section.
 -->
 
 - [Full Rendered Proposal]()
 
-<!--
-  Please open and link to a corresponding discussion thread
-  (under "Discussion" tab of the repo).
-  After submitting the PR, make sure to edit the discussion
-  to link to this PR.
--->
-
 - [Discussion Thread]()
 
-<!-- include additional links to related issues if applicable -->
+<!--
+  Optional: Include any additional links to related issues or resources below
+-->
 
 ---
 
