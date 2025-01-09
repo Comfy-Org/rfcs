@@ -1,10 +1,7 @@
 # RFC: ComfyUI API Improvements
 
 - Start Date: 2025-01-06
-- Target Major Version:
-
-  - ComfyUI 0.4
-  - ComfyUI_frontend 1.8
+- Target Major Version: TBD
 
 ## Summary
 
@@ -308,4 +305,5 @@ The old endpoints will be deprecated but maintained until the next major version
   1. A: Provide clear migration instructions should be enough.
 
 3. How do we handle custom node types that may not fit the new output specification format?
+
 4. What is the optimal caching strategy for lazy-loaded COMBO options?
