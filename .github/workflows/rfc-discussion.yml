@@ -1,0 +1,96 @@
+name: Create RFC Discussion
+
+on:
+  pull_request_target:
+    types: [opened]
+    paths:
+      - 'rfcs/**.md'
+
+jobs:
+  create-discussion:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      discussions: write
+    
+    steps:
+      - name: Get Changed Files
+        id: changed-files
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            
+            core.info('All changed files: ' + JSON.stringify(files.map(f => f.filename)));
+            
+            const mdFile = files.find(file => file.filename.startsWith('rfcs/') && file.filename.endsWith('.md'));
+            if (!mdFile) {
+              throw new Error('No markdown file found in rfcs directory');
+            }
+            core.info('Found markdown file: ' + mdFile.filename);
+            core.setOutput('filename', mdFile.filename);
+
+      - name: Create a new GitHub Discussion
+        id: create-discussion
+        uses: abirismyname/create-discussion@v1.x
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}      
+        with:
+          title: "RFC Discussion: ${{ github.event.pull_request.title }}"
+          body: |
+            This is the discussion thread for RFC PR #${{ github.event.pull_request.number }}.
+            
+            Please provide feedback and discuss the RFC here rather than in the PR comments.
+            
+            PR Link: ${{ github.event.pull_request.html_url }}
+          repository-id: "R_kgDONlIMAA"
+          category-id: "DIC_kwDONlIMAM4Cl3Tj"
+
+      - name: Update PR description
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const mdFile = process.env.MD_FILE;
+            core.info('Markdown file from env: ' + mdFile);
+            core.info('PR head ref: ' + context.payload.pull_request.head.ref);
+            
+            const prBody = context.payload.pull_request.body;
+            const renderedUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/blob/${context.payload.pull_request.head.ref}/${mdFile}`;
+            
+            core.info('Generated URL: ' + renderedUrl);
+            
+            const updatedBody = prBody
+              .replace('[Full Rendered Proposal]()', `[Full Rendered Proposal](${renderedUrl})`)
+              .replace('[Discussion Thread]()', `[Discussion Thread](${process.env.DISCUSSION_URL})`);
+            
+            // Add labels
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['rfc']
+            });
+
+            // Lock PR comments
+            await github.rest.issues.lock({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              lock_reason: 'resolved'
+            });
+
+            // Update PR body
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              body: updatedBody
+            });
+        env:
+          DISCUSSION_URL: ${{ steps.create-discussion.outputs.discussion-url }}
+          MD_FILE: ${{ steps.changed-files.outputs.filename }}  
