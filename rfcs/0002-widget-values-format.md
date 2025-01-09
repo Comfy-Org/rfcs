@@ -5,7 +5,7 @@
 
 ## Summary
 
-This RFC proposes a new format for handling widget values in ComfyUI workflows by integrating them directly into the node inputs array instead of storing them in a separate `widgets_values` array. The new format improves type safety, maintainability, and self-documentation of workflows by making each widget value a named, typed input with explicit metadata. This change will require a version bump in the workflow schema from 1.0 to 1.1, but includes backward compatibility measures to ensure a smooth transition for existing workflows and custom nodes.
+This RFC proposes a new format for handling widget values in ComfyUI workflows by integrating them directly into the node inputs array instead of storing them in a separate `widgets_values` array. The new format improves type safety, maintainability, and self-documentation of workflows by making each widget value a named, typed input with explicit metadata. This change will require a version bump in the workflow schema from 1.0 to 2.0, but includes backward compatibility measures to ensure a smooth transition for existing workflows and custom nodes.
 
 ## Basic example
 
@@ -118,19 +118,19 @@ The proposed format change addresses several key limitations in the current widg
 
 ### Schema Changes
 
-The workflow schema will be updated from version 1.0 to 1.1 to accommodate the new widget values format. Here's the proposed Zod schema changes:
+The workflow schema will be updated from version 1.0 to 2.0 to accommodate the new widget values format. Here's the proposed Zod schema changes:
 
 ```typescript
-// Version 1.1 Node Input Schema
-const NodeInputV1_1 = z.object({
+// Version 2.0 Node Input Schema
+const NodeInputV2 = z.object({
   name: z.string(),
   type: z.string(),
   link: z.number().optional(),
   value: z.any().optional(), // For widget values
 });
 
-// Version 1.1 Node Schema
-const NodeV1_1 = z.object({
+// Version 2.0 Node Schema
+const NodeV2 = z.object({
   id: z.number(),
   type: z.string(),
   pos: z.tuple([z.number(), z.number()]),
@@ -138,7 +138,7 @@ const NodeV1_1 = z.object({
   flags: z.record(z.any()),
   order: z.number(),
   mode: z.number(),
-  inputs: z.array(NodeInputV1_1),
+  inputs: z.array(NodeInputV2),
   outputs: z.array(NodeOutput),
   properties: z.record(z.any()),
   // widgets_values field removed
@@ -150,33 +150,33 @@ const NodeV1_1 = z.object({
 To maintain backward compatibility, the system will include bidirectional converters between versions:
 
 ```typescript
-function convertTo1_1(nodeV1_0: NodeV1_0): NodeV1_1 {
-  const widgetDefinitions = getNodeWidgetDefinitions(nodeV1_0.type);
+function convertTo2(nodeV1: NodeV1): NodeV2 {
+  const widgetDefinitions = getNodeWidgetDefinitions(nodeV1.type);
 
   // Convert widget values to input format
   const widgetInputs = widgetDefinitions.map((def, index) => ({
     name: def.name,
     type: def.type,
-    value: nodeV1_0.widgets_values[index]
+    value: nodeV1.widgets_values[index]
   }));
 
   return {
-    ...nodeV1_0,
-    inputs: [...nodeV1_0.inputs, ...widgetInputs],
+    ...nodeV1,
+    inputs: [...nodeV1.inputs, ...widgetInputs],
     widgets_values: undefined // Remove widget_values field
   };
 }
 
-function convertTo1_0(nodeV1_1: NodeV1_1): NodeV1_0 {
-  const widgetDefinitions = getNodeWidgetDefinitions(nodeV1_1.type);
-  const regularInputs = nodeV1_1.inputs.filter(input => !widgetDefinitions.find(def => def.name === input.name));
+function convertTo1(nodeV2: NodeV2): NodeV1 {
+  const widgetDefinitions = getNodeWidgetDefinitions(nodeV2.type);
+  const regularInputs = nodeV2.inputs.filter(input => !widgetDefinitions.find(def => def.name === input.name));
   const widgetValues = widgetDefinitions.map(def => {
-    const input = nodeV1_1.inputs.find(i => i.name === def.name);
+    const input = nodeV2.inputs.find(i => i.name === def.name);
     return input?.value;
   });
 
   return {
-    ...nodeV1_1,
+    ...nodeV2,
     inputs: regularInputs,
     widgets_values: widgetValues
   };
@@ -187,7 +187,7 @@ function convertTo1_0(nodeV1_1: NodeV1_1): NodeV1_0 {
 
 When exporting workflows, users will be presented with schema version choices:
 
-1. Latest Version (1.1) - Default
+1. Latest Version (2.0) - Default
 2. Legacy Version (1.0) - For compatibility with older systems (Beta Reroute)
 3. Legacy Version (0.4) - For compatibility with older systems
 
@@ -263,9 +263,9 @@ The transition to the new widget values format will be implemented through a pha
 
 1. **Version Support**
 
-  - ComfyUI will support both 1.0 and 1.1 formats simultaneously during the transition period
-  - The internal format will be 1.1, with automatic conversion happening at workflow load/save
-  - All new features will target the 1.1 format
+  - ComfyUI will support both 1.0 and 2.0 formats simultaneously during the transition period
+  - The internal format will be 2.0, with automatic conversion happening at workflow load/save
+  - All new features will target the 2.0 format
 
 2. **Breaking Changes**
 
@@ -309,7 +309,7 @@ The transition to the new widget values format will be implemented through a pha
 
   - Beta release with dual format support
   - 3-month transition period with both formats supported
-  - Full migration to 1.1 format in next major version
+  - Full migration to 2.0 format in next major version
 
 ## Unresolved questions
 
