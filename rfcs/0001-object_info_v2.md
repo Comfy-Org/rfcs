@@ -142,7 +142,7 @@ def INPUT_TYPES(s):
 #### 2.1 New Endpoints
 
 ```python
-@routes.get("/api/v2/list_files/{folder_name}")
+@routes.get("/api/list_files/{folder_name}")
 async def list_folder_files(request):
     folder_name = request.match_info["folder_name"]
     filter_ext = request.query.get("filter_ext", "").split(",")
@@ -156,21 +156,25 @@ async def list_folder_files(request):
         "folder": folder_name
     })
 
-@routes.get("/api/v2/object_info")
-async def get_object_info(request):
+@routes.get("/api/node_definitions")
+async def get_node_definitions(request):
     node_class = request.query.get("node_class")
-    include_combos = request.query.get("include_combos", "false").lower() == "true"
 
     response = {}
     if node_class:
         # Single node info
-        response[node_class] = node_info_v2(node_class, include_combos)
+        response[node_class] = node_info_v2(node_class)
     else:
         # All nodes info (default behavior)
         for cls in nodes.NODE_CLASS_MAPPINGS:
-            response[cls] = node_info_v2(cls, include_combos)
+            response[cls] = node_info_v2(cls)
 
     return web.json_response(response)
+
+@routes.get("/api/object_info")
+async def get_object_info(request):
+    logging.warning("Deprecated: use /api/v2/node_definitions instead")
+    return node_info_v1(request)
 ```
 
 #### 2.2 New Response Format
@@ -300,5 +304,8 @@ The old endpoints will be deprecated but maintained until the next major version
 
 1. How should we handle network failures in lazy loading scenarios?
 2. Should we provide a migration utility for updating existing nodes?
+
+  1. A: Provide clear migration instructions should be enough.
+
 3. How do we handle custom node types that may not fit the new output specification format?
 4. What is the optimal caching strategy for lazy-loaded COMBO options?
