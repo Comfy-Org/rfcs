@@ -27,7 +27,6 @@ Current format node serialization format:
     { "name": "positive", "type": "CONDITIONING", "link": 4 },
     { "name": "negative", "type": "CONDITIONING", "link": 6 },
     { "name": "latent_image", "type": "LATENT", "link": 2 },
-    // Seed input converted from widget
     {
       "name": "seed",
       "type": "INT",
@@ -59,7 +58,6 @@ Proposed format:
     { "name": "positive", "type": "CONDITIONING", "link": 4 },
     { "name": "negative", "type": "CONDITIONING", "link": 6 },
     { "name": "latent_image", "type": "LATENT", "link": 2 },
-    // Seed input converted from widget
     { "name": "seed", "type": "INT", "value": 156680208700286, "link": null },
     { "name": "denoise", "type": "FLOAT", "value": 1.0 },
     { "name": "steps", "type": "INT", "value": 20 },
@@ -72,6 +70,28 @@ Proposed format:
   "properties": {},
 }
 ```
+
+In the new format, the `link` field determines the input's behavior and UI representation:
+
+- `link: undefined` - Rendered as a widget (e.g., text input, slider, dropdown)
+
+  ```json
+  { "name": "steps", "type": "INT", "value": 20 }
+  ```
+
+- `link: null` - Rendered as an unconnected input socket
+
+  ```json
+  { "name": "seed", "type": "INT", "value": 156680208700286, "link": null }
+  ```
+
+- `link: number` - Rendered as a connected input socket with the specified link ID
+
+  ```json
+  { "name": "model", "type": "MODEL", "link": 1 }
+  ```
+
+This distinction allows nodes to clearly indicate whether an input should be displayed as an interactive widget or as a connection point, while maintaining the ability to store default values for unconnected inputs.
 
 ## Motivation
 
@@ -278,10 +298,10 @@ The transition to the new widget values format will be implemented through a pha
 
     ```javascript
     get widgets_values() {
-      console.warn("Deprecated: accessing widgets_values directly. Please migrate to input values.");
-      return this.inputs
-        .filter(input => input.value !== undefined)
-        .map(input => input.value);
+     console.warn("Deprecated: accessing widgets_values directly. Please migrate to input values.");
+     return this.inputs
+       .filter(input => input.value !== undefined)
+       .map(input => input.value);
     }
     ```
 
