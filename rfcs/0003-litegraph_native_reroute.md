@@ -211,15 +211,15 @@ The native reroute implementation introduces a cleaner schema structure that mov
   - 0.4: Links are arrays `[id, origin_id, origin_slot, target_id, target_slot, type]`
   - 1.0: Links are objects with named properties:
 
-    ```json
+    ```
     {
-    "id": number,
-    "origin_id": number,
-    "origin_slot": number,
-    "target_id": number,
-    "target_slot": number,
-    "type": string,
-    "parentId": number  // References parent reroute point
+      "id": number,
+      "origin_id": number,
+      "origin_slot": number,
+      "target_id": number,
+      "target_slot": number,
+      "type": string,
+      "parentId": number  // References parent reroute point
     }
     ```
 
