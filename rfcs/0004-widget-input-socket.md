@@ -157,8 +157,8 @@ The primary goal is to make ComfyUI more intuitive and efficient to use while re
 
     ```typescript
     interface InputSocket {
-    widget?: LGraphWidget;
-    // ... existing input socket properties
+      widget?: LGraphWidget;
+      // ... existing input socket properties
     }
     ```
 
