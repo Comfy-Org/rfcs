@@ -172,18 +172,6 @@ The primary goal is to make ComfyUI more intuitive and efficient to use while re
 
 ## Drawbacks
 
-Why should we _not_ do this? Please consider:
-
-- implementation cost, both in term of code size and complexity
-- whether the proposed feature can be implemented in user space
-- the impact on teaching people ComfyUI
-- integration of this feature with other existing and planned features
-- cost of migrating existing ComfyUI applications (is it a breaking change?)
-
-There are tradeoffs to choosing any path. Attempt to identify them here.
-
-## Drawbacks
-
 1. **Implementation Challenges**
 
   - Need to modify core rendering logic in LGraphCanvas
