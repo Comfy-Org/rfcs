@@ -53,6 +53,11 @@ When the cursor hovers over a widget, a socket will be shown on the left side of
 
 ![cursor_hover_on_widget](https://github.com/user-attachments/assets/953867dc-f27c-47de-a06f-aa94a29350a4)
 
+When grabbing a link, the widget with a matching type will be highlighted. Here in the example, the link type is `INT`,
+so the widget `seed` and `steps` are highlighted.
+
+![grab_link](https://github.com/user-attachments/assets/9f44ff15-37ae-4fda-af77-24048098582c)
+
 When connected, the widget will be disabled (grayed out) and the socket will be highlighted.
 
 ![connected_widget_socket](https://github.com/user-attachments/assets/fe17d9b2-01c6-441a-adc6-f869f7aa3cbf)
