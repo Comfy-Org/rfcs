@@ -42,7 +42,7 @@ There are two ways to convert a socket to a widget:
 
 2\. **Option2**: Drag a link of correct type from an output socket on another node to the widget (Implemented in <https://github.com/Comfy-Org/ComfyUI_frontend/pull/1021>).
 
-![drag_link_to_widget](https://github.com/user-attachments/assets/360013b2-d350-4fb0-bbce-cb860178d9ed)
+https://github.com/user-attachments/assets/360013b2-d350-4fb0-bbce-cb860178d9ed
 
 ### Proposed design for widget input socket
 
