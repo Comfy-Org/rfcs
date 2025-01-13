@@ -17,7 +17,7 @@ through a bit of a design process and produce a consensus among the ComfyUI
 
 An RFC goes through the following stages:
 
-- **Pending:** when the RFC is submitted as a discussion thread. We use discussions instead of Pull Requests as the former provides better discussion threading.
+- **Pending:** when the RFC is submitted as a PR (with associated discussion thread). We use Discussions instead of Pull Request comments as the former provides better discussion threading.
 - **Active:** when an RFC is acknowledged and undergoing implementation. The feature may be shipped as experimental during this phase.
 - **Landed:** when an RFC's proposed changes are shipped as stable in a release.
 - **Rejected:** when an RFC is officially rejected or dropped.
@@ -29,7 +29,7 @@ changes to standards / APIs in the ComfyUI ecosystem.
 
 What constitutes a "substantial" change is evolving based on community norms, but may include the following:
 
-- A new or change to existing ComfyUI core libraries or backend APIs eg. [Model Patcher](https://github.com/comfyanonymous/ComfyUI/commit/0ee322ec5f338791c5836b79830e2f419d6fcc79). If you are writing a custom node and want something expoosed by core in an API, please open an issue. 
+- A new addition to or modification of existing ComfyUI core libraries or backend APIs eg. [Model Patcher](https://github.com/comfyanonymous/ComfyUI/commit/0ee322ec5f338791c5836b79830e2f419d6fcc79). If you are writing a custom node and want something exposed by core in an API, please open an issue.
 - A major change to ComfyUI functionality, such as the execution engine eg. [Execution Model Inversion](https://github.com/comfyanonymous/ComfyUI/commit/5cfe38f41c7091b0fd954877d9d7427a8b438b1a)
 - Changes to workflow.json schema
 - Changes to custom node standards
@@ -68,7 +68,13 @@ into ComfyUI.
 
     - Put care into the details: **RFCs that do not present convincing motivation, demonstrate understanding of the impact of the design, or are disingenuous about the drawbacks or alternatives tend to be poorly-received**.
 
-2.  Open a new thread in [Discussions](https://github.com/comfy-org/rfcs/discussions) and make sure to set category to "RFC Discussions".
+2.  Submit the Markdown file as a pull request.
+
+    - Fork this repo.
+
+    - Create your proposal as `rfcs/0000-my-feature.md` (where "my-feature" is descriptive).
+
+    - Submit a pull request. A new thread in [Discussions](https://github.com/comfy-org/rfcs/discussions) will be made automatically.
 
     - Build consensus and integrate feedback in the discussion thread. RFCs that have broad support are much more likely to make progress than those that don't receive any comments.
 
@@ -80,14 +86,6 @@ into ComfyUI.
     - An RFC may be rejected after public discussion has settled and comments have been made summarizing the rationale for rejection. A member of the [core team] should then close the RFC's associated pull request.
 
     - An RFC may be accepted at the close of its final comment period. A [core team] member will merge the RFC's associated pull request, at which point the RFC will become 'active'.
-
-4.  If the proposal has been approved for inclusion, you can prepare a Pull Request:
-
-    - Fork this repo.
-
-    - Create your proposal as `active-rfcs/0000-my-feature.md` (where "my-feature" is descriptive. don't assign an RFC number yet).
-
-    - Submit a pull request. Make sure to link to the discussion thread.
 
 ## Details on Active RFCs
 
