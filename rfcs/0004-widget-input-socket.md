@@ -18,7 +18,7 @@ This change aims to:
 - Reduce the number of clicks needed to make connections
 - Eliminate the need to maintain conversion states in workflow files
 
-The proposal represents a breaking change that would be implemented in v2.0, though existing workflows would continue to function without modification.
+The proposal represents a breaking change that would be implemented in [workflow schema v2.0](https://github.com/Comfy-Org/rfcs/pull/2), though existing workflows would continue to function without modification.
 
 ## Basic example
 
