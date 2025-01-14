@@ -72,7 +72,7 @@ into ComfyUI.
 
     - Fork this repo.
 
-    - Create your proposal as `rfcs/0000-my-feature.md` (where "my-feature" is descriptive).
+    - Create your proposal as `rfcs/0000-my-feature.md` (where "my-feature" is descriptive). Don't assign an RFC number yet, that will be done when the PR is merged. Make sure to place the file in the `rfcs` directory.
 
     - Submit a pull request. A new thread in [Discussions](https://github.com/comfy-org/rfcs/discussions) will be made automatically.
 
