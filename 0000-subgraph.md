@@ -24,13 +24,13 @@ Simple design mock-ups.
 
 The parent / primary workflow, as opened normally.
 
-![Parent workflow example](placeholder)
+![Parent workflow example](https://github.com/user-attachments/assets/255e5a43-fd7a-48b4-beb5-c9e8e09af4bd)
 
 ### Subgraph
 
 The contents of the subgraph, as displayed after opening.
 
-![Subgraph example](placeholder)
+![Subgraph example](https://github.com/user-attachments/assets/b765ef67-3ac3-4ba0-90ba-0465471b970f)
 
 ## Motivation
 
