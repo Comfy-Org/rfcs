@@ -7,7 +7,7 @@
 
 ## Summary
 
-Brief explanation of the feature.
+This RFC proposes adding support for variable-length inputs in ComfyUI nodes, allowing a single node to accept a dynamic number of inputs. The feature introduces a new `var_length` input type configuration that enables nodes to handle multiple inputs through either socket connections or widget inputs, with configurable minimum and maximum input counts. This eliminates the need for multiple fixed-input node variants or chained node connections, resulting in cleaner workflows and more maintainable code.
 
 ## Basic example
 
