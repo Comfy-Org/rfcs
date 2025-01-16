@@ -1,4 +1,4 @@
-# Subgraph
+# RFC: Subgraph
 
 - Start Date: 2025-01-12
 - Target Major Version: TBD
