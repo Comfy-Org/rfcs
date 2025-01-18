@@ -192,7 +192,7 @@ interface SubgraphDefinition extends WorkflowExtensions {
 interface SubgraphIO {
   id: string
   type: string
-  // TODO: ...
+  // ... other display properties, similar to node inputs and outputs
 }
 
 /** A reference to a node widget shown in the parent graph */
