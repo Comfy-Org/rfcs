@@ -68,7 +68,7 @@ When connected, the widget will be disabled (grayed out) and the socket will be 
 
   - Current implementation requires complex state tracking for widget/socket conversion status
   - Eliminates need to persist conversion state in workflow files
-  - Removes the `force_input` configuration complexity from node definitions
+  - Removes the `default_input` configuration complexity from node definitions
   - Reduces potential for bugs related to state synchronization
 
 2. **Improved Discoverability**
