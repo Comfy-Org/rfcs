@@ -1,6 +1,6 @@
 # RFC: ComfyUI API Improvements
 
-- Start Date: 2025-01-06
+- Start Date: 2025-02-03
 - Target Major Version: TBD
 
 ## Summary
@@ -33,8 +33,22 @@ class CheckpointLoader:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "config_name": ("FILE_COMBO", {"folder_path": "configs"}),
-                "ckpt_name": ("FILE_COMBO", {"folder_path": "checkpoints"}),
+                "config_name": ("COMBO", {
+                    "type" : "remote",
+                    "route": "/internal/files",
+                    "response_key" : "files",
+                    "query_params" : {
+                        "folder_path" : "configs"
+                    }
+                }),
+                "ckpt_name": ("COMBO", {
+                    "type" : "remote",
+                    "route": "/internal/files",
+                    "response_key" : "files",
+                    "query_params" : {
+                        "folder_path" : "checkpoints"
+                    }
+                }),
             }
         }
 ```
@@ -81,7 +95,62 @@ The implementation will be split into two phases to minimize disruption:
 
 ### Phase 1: Node Definition Format Changes
 
-#### 1.1 New Output Format
+#### 1.1 New Combo Specification
+
+Input types will be explicitly defined using tuples with configuration objects. A variant of the `COMBO` type will be added to support lazy loading options from the server.
+
+```python
+@classmethod
+def INPUT_TYPES(s):
+    return {
+        "required": {
+            # Remote combo
+            "ckpt_name": ("COMBO", {
+                "type" : "remote",
+                "route": "/internal/files",
+                "response_key" : "files",
+                "query_params" : {
+                    "folder_path" : "checkpoints",
+                    "filter_ext": [".ckpt", ".safetensors"]
+                }
+            }),
+            # Regular combo
+            "mode": ("COMBO", {
+                "options": ["balanced", "speed", "quality"],
+                "default": "balanced",
+                "tooltip": "Processing mode"
+            })
+        }
+    }
+```
+
+#### 1.2 New Endpoints
+
+```python
+@routes.get("/api/files/{folder_name}")
+async def list_folder_files(request):
+    folder_name = request.match_info["folder_name"]
+    filter_ext = request.query.get("filter_ext", "").split(",")
+    filter_content_type = request.query.get("filter_content_type", "").split(",")
+
+    files = folder_paths.get_filename_list(folder_name)
+    if filter_ext and filter_ext[0]:
+        files = [f for f in files if any(f.endswith(ext) for ext in filter_ext)]
+    if filter_content_type and filter_content_type[0]:
+        files = folder_paths.filter_files_content_type(files, filter_content_type)
+
+    return web.json_response({
+        "files": files,
+    })
+```
+
+#### 1.3 Gradual Change with Nodes
+
+Nodes will be updated incrementally to use the new combo specification.
+
+### Phase 2: Node Output Specification Changes
+
+#### 2.1 New Output Format
 
 Nodes will transition from multiple return definitions to a single `RETURNS` tuple:
 
@@ -108,70 +177,6 @@ RETURNS = (
         "tooltip": "negative-tooltip"
     }
 )
-```
-
-#### 1.2 Input Type Definitions
-
-Input types will be explicitly defined using tuples with configuration objects:
-
-```python
-@classmethod
-def INPUT_TYPES(s):
-    return {
-        "required": {
-            # File-based combos become FILE_COMBO type
-            "ckpt_name": ("FILE_COMBO", {
-                "folder_path": "checkpoints",
-                "filter_ext": [".ckpt", ".safetensors"]
-            }),
-            # Regular combos become explicit
-            "mode": ("COMBO", {
-                "options": ["balanced", "speed", "quality"],
-                "default": "balanced",
-                "tooltip": "Processing mode"
-            })
-        }
-    }
-```
-
-### Phase 2: API Changes
-
-#### 2.1 New Endpoints
-
-```python
-@routes.get("/api/list_files/{folder_name}")
-async def list_folder_files(request):
-    folder_name = request.match_info["folder_name"]
-    filter_ext = request.query.get("filter_ext", "").split(",")
-
-    files = folder_paths.get_filename_list(folder_name)
-    if filter_ext and filter_ext[0]:
-        files = [f for f in files if any(f.endswith(ext) for ext in filter_ext)]
-
-    return web.json_response({
-        "files": files,
-        "folder": folder_name
-    })
-
-@routes.get("/api/node_definitions")
-async def get_node_definitions(request):
-    node_class = request.query.get("node_class")
-
-    response = {}
-    if node_class:
-        # Single node info
-        response[node_class] = node_info_v2(node_class)
-    else:
-        # All nodes info (default behavior)
-        for cls in nodes.NODE_CLASS_MAPPINGS:
-            response[cls] = node_info_v2(cls)
-
-    return web.json_response(response)
-
-@routes.get("/api/object_info")
-async def get_object_info(request):
-    logging.warning("Deprecated: use /api/v2/node_definitions instead")
-    return node_info_v1(request)
 ```
 
 #### 2.2 New Response Format
@@ -219,10 +224,14 @@ New format:
         "input": {
             "required": {
                 "ckpt_name": [
-                    "FILE_COMBO",
+                    "COMBO",
                     {
-                        "folder_path": "checkpoints",
-                        "filter_ext": [".ckpt", ".safetensors"]
+                        "type" : "remote",
+                        "route": "/internal/files",
+                        "response_key" : "files",
+                        "query_params" : {
+                            "folder_path" : "checkpoints"
+                        }
                     }
                 ],
                 "combo_input": [
@@ -250,41 +259,20 @@ New format:
 }
 ```
 
-#### 2.3 Caching Strategy
+#### 2.3 Compatibility Layer
 
-- File listings will be cached server-side with a configurable TTL
-- Cache invalidation on file system changes
-- Client-side caching headers for file listings
+Transformations will be applied to the old format to convert it to the new format.
 
-```python
-CACHE_TTL = 300  # 5 minutes
+#### 2.4 Gradual Change with Nodes
 
-class FileListCache:
-    def __init__(self):
-        self.cache = {}
-        self.last_update = {}
-
-    async def get_files(self, folder, filter_ext=None):
-        now = time.time()
-        if folder in self.cache:
-            if now - self.last_update[folder] < CACHE_TTL:
-                return self.cache[folder]
-
-        files = folder_paths.get_filename_list(folder)
-        self.cache[folder] = files
-        self.last_update[folder] = now
-        return files
-```
+Nodes will be updated incrementally to use the new output specification format.
 
 ### Migration Support
 
 To support gradual migration, the API will:
 
 1. Accept both old and new node definitions
-2. Provide both v1 and v2 API endpoints
-3. Include a compatibility layer in the frontend
-
-The old endpoints will be deprecated but maintained until the next major version.
+2. Include a compatibility layer in the frontend
 
 ## Drawbacks
 
@@ -299,11 +287,11 @@ The old endpoints will be deprecated but maintained until the next major version
 
 ## Unresolved questions
 
-1. How should we handle network failures in lazy loading scenarios?
+1. ~~How should we handle network failures in lazy loading scenarios?~~ Backoff and retry logic will be implemented.
 2. Should we provide a migration utility for updating existing nodes?
 
-  1. A: Provide clear migration instructions should be enough.
+3. A: Provide clear migration instructions should be enough.
 
-3. How do we handle custom node types that may not fit the new output specification format?
+4. How do we handle custom node types that may not fit the new output specification format?
 
-4. What is the optimal caching strategy for lazy-loaded COMBO options?
+5. ~~What is the optimal caching strategy for lazy-loaded COMBO options?~~ Caching strategy determined per-widget. By default, initialize on first access and do not re-fetch.
