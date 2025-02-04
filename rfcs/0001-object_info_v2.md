@@ -23,7 +23,6 @@ class CheckpointLoader:
         return {
             "required": {
                 "config_name": (folder_paths.get_filename_list("configs"),),
-                "ckpt_name": (folder_paths.get_filename_list("checkpoints"),),
             }
         }
 
@@ -39,14 +38,6 @@ class CheckpointLoader:
                     "response_key" : "files",
                     "query_params" : {
                         "folder_path" : "configs"
-                    }
-                }),
-                "ckpt_name": ("COMBO", {
-                    "type" : "remote",
-                    "route": "/internal/files",
-                    "response_key" : "files",
-                    "query_params" : {
-                        "folder_path" : "checkpoints"
                     }
                 }),
             }
@@ -93,7 +84,7 @@ RETURNS = (
 
 The implementation will be split into two phases to minimize disruption:
 
-### Phase 1: Node Definition Format Changes
+### Phase 1: Combo Specification Changes
 
 #### 1.1 New Combo Specification
 
@@ -106,15 +97,17 @@ def INPUT_TYPES(s):
         "required": {
             # Remote combo
             "ckpt_name": ("COMBO", {
-                "type" : "remote",
+                "type": "remote",
                 "route": "/internal/files",
-                "response_key" : "files",
-                "query_params" : {
-                    "folder_path" : "checkpoints",
+                "response_key": "files",
+                "refresh": 0,  # TTL in ms. 0 = do not refresh after initial load.
+                "cache_key": None,  # Optional custom cache key
+                "invalidation_signal": None,  # Optional websocket event to trigger refresh
+                "query_params": {
+                    "folder_path": "checkpoints",
                     "filter_ext": [".ckpt", ".safetensors"]
                 }
             }),
-            # Regular combo
             "mode": ("COMBO", {
                 "options": ["balanced", "speed", "quality"],
                 "default": "balanced",
@@ -127,7 +120,7 @@ def INPUT_TYPES(s):
 #### 1.2 New Endpoints
 
 ```python
-@routes.get("/api/files/{folder_name}")
+@routes.get("/internal/files/{folder_name}")
 async def list_folder_files(request):
     folder_name = request.match_info["folder_name"]
     filter_ext = request.query.get("filter_ext", "").split(",")
@@ -261,7 +254,7 @@ New format:
 
 #### 2.3 Compatibility Layer
 
-Transformations will be applied to the old format to convert it to the new format.
+Transformations will be applied on the frontend to convert the old format to the new format.
 
 #### 2.4 Gradual Change with Nodes
 
@@ -271,8 +264,8 @@ Nodes will be updated incrementally to use the new output specification format.
 
 To support gradual migration, the API will:
 
-1. Accept both old and new node definitions
-2. Include a compatibility layer in the frontend
+1. **Dual Support**: Accept both old and new node definitions
+2. **Compatibility Layer**: Include a compatibility layer in the frontend that can type check and handle both old and new formats.
 
 ## Drawbacks
 
