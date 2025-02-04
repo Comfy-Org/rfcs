@@ -117,6 +117,81 @@ def INPUT_TYPES(s):
     }
 ```
 
+Use a Proxy on remote combo widgets' values property that doesn't compute/fetch until first access.
+
+```typescript
+  COMBO(node, inputName, inputData: InputSpec, app, widgetName) {
+
+  // ...
+
+  const res = {
+    widget: node.addWidget('combo', inputName, defaultValue, () => {}, {
+      // Support old and new combo input specs
+      values: widgetStore.isComboInputV2(inputData)
+        ? inputData[1].options
+        : inputType
+    })
+  }
+
+  if (type === 'remote') {
+    const remoteWidget = useRemoteWidget(inputData)
+
+    const origOptions = res.widget.options
+    res.widget.options = new Proxy(origOptions, {
+      // Defer fetching until first access (node added to graph)
+      get(target, prop: string | symbol) {
+        if (prop !== 'values') return target[prop]
+
+        // Start non-blocking fetch
+        remoteWidget.fetchOptions().then((data) => {})
+
+        const current = remoteWidget.getCacheEntry()
+        return current?.data || widgetStore.getDefaultValue(inputData)
+      }
+    })
+  }
+```
+
+Backoff time will be determined by the number of failed attempts:
+
+```typescript
+// Exponential backoff with max of 10 seconds
+const backoff = Math.min(1000 * 2 ** (failedAttempts - 1), 10000);
+
+// Example backoff times:
+// Attempt 1: 1000ms (1s)
+// Attempt 2: 2000ms (2s)
+// Attempt 3: 4000ms (4s)
+// Attempt 4: 8000ms (8s)
+// Attempt 5+: 10000ms (10s)
+```
+
+Share computation results between widgets using a key based on the route and query params:
+
+```typescript
+// Global cache for memoizing fetches
+const dataCache = new Map<string, CacheEntry<any>>();
+
+function getCacheKey(options: RemoteWidgetOptions): string {
+  return JSON.stringify({ route: options.route, params: options.query_params });
+}
+```
+
+The cache can be invalidated in two ways:
+
+1. **TTL-based**: Using the `refresh` parameter to specify a time-to-live in milliseconds. When TTL expires, next access triggers a new fetch.
+2. **Manual**: Using the `forceUpdate` method of the widget, which deletes the cache entry and triggers a new fetch on next access.
+
+Example TTL usage:
+
+```python
+"ckpt_name": ("COMBO", {
+    "type": "remote",
+    "refresh": 60000,  # Refresh every minute
+    // ... other options
+})
+```
+
 #### 1.2 New Endpoints
 
 ```python
