@@ -280,11 +280,25 @@ To support gradual migration, the API will:
 
 ## Unresolved questions
 
-1. ~~How should we handle network failures in lazy loading scenarios?~~ Backoff and retry logic will be implemented.
-2. Should we provide a migration utility for updating existing nodes?
+### Resolved
 
-3. A: Provide clear migration instructions should be enough.
+1. ~~Network failure handling~~ - Implemented with exponential backoff
+2. ~~Caching strategy~~ - Per-widget initialization with manual invalidation
 
+### Implementation Details
+
+3. Should we provide a migration utility for updating existing nodes?
 4. How do we handle custom node types that may not fit the new output specification format?
 
-5. ~~What is the optimal caching strategy for lazy-loaded COMBO options?~~ Caching strategy determined per-widget. By default, initialize on first access and do not re-fetch.
+### Future Considerations
+
+5. Should an option to set an invalidation signal be added to the remote COMBO type?
+6. Should an option for a custom cache key for the remote COMBO type be added?
+
+### Security Concerns
+
+7. Implementation details needed for:
+   - Rate limiting strategy
+   - Input validation approach
+   - Cache poisoning prevention measures
+   - Access control mechanisms
