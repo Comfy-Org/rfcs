@@ -101,8 +101,6 @@ def INPUT_TYPES(s):
                 "route": "/internal/files",
                 "response_key": "files",
                 "refresh": 0,  # TTL in ms. 0 = do not refresh after initial load.
-                "cache_key": None,  # Optional custom cache key
-                "invalidation_signal": None,  # Optional websocket event to trigger refresh
                 "query_params": {
                     "folder_path": "checkpoints",
                     "filter_ext": [".ckpt", ".safetensors"]
