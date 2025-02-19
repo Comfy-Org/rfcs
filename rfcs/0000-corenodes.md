@@ -24,10 +24,12 @@ This will be more of a list of nodes considered to have a core implementation.
 ### Preview Nodes
 
 1. Preview Mask
-This would be identical to the Preview Image node, except take mask as input. Alternatively, the existing Preview Image node could have its ```image``` input be defined as ```(IMAGE,MASK)``` so that it could accept both IMAGE and MASK. The code would simply need to be updated to support the tensor format to display it. A Preview Mask node exists in (ComfyUI_essentials)[https://github.com/cubiq/ComfyUI_essentials] node pack.
+   
+   This would be identical to the Preview Image node, except take mask as input. Alternatively, the existing Preview Image node could have its ```image``` input be defined as ```(IMAGE,MASK)``` so that it could accept both IMAGE and MASK. The code would simply need to be updated to support the tensor format to display it. A Preview Mask node exists in (ComfyUI_essentials)[https://github.com/cubiq/ComfyUI_essentials] node pack.
 
-2. Preview Any
-Strings, integers, floats, etc. should be previewable. This is long requested and has a number of existing implementations. In the case of the SaveImages node in nodes.py, ```return { "ui": { "images": results } }``` is used to report the images that should be seen in the UI; something similar would need to be done to support strings, and then arbitrary types could also just have their string representations displayed.
+3. Preview Any
+   
+   Strings, integers, floats, etc. should be previewable. This is long requested and has a number of existing implementations. In the case of the SaveImages node in nodes.py, ```return { "ui": { "images": results } }``` is used to report the images that should be seen in the UI; something similar would need to be done to support strings, and then arbitrary types could also just have their string representations displayed.
 
 From a quick google search, one node pack that includes a text preview is (ComfyUI_Custom_Nodes_AlekPet)[https://github.com/AlekPet/ComfyUI_Custom_Nodes_AlekPet/blob/master/ExtrasNode/extras_node.py], with 1k+ stars.
 
@@ -36,7 +38,8 @@ From a quick google search, one node pack that includes a text preview is (Comfy
 While core ComfyUI uses string inputs, it technically has no nodes that output strings, and that was the reason why no core string manipulation nodes were implemented. That should change, given how often strings are used, whether for prompts or filenames.
 
 1. Basic String Manipulation
-There should be an assortment of string nodes that do common, basic string operations, such as: String Concatenate, String Replace, String Trim, String Select (beginning index, end index). List is not exhaustive; more basic operations can be supported. Existing custom nodes that do this sort of thing should be looked at, to make sure core implementation supports desired features.
+   
+   There should be an assortment of string nodes that do common, basic string operations, such as: String Concatenate, String Replace, String Trim, String Select (beginning index, end index). List is not exhaustive; more basic operations can be supported. Existing custom nodes that do this sort of thing should be looked at, to make sure core implementation supports desired features.
 
 ### Number Nodes (Math)
 
@@ -45,10 +48,12 @@ Many, many workflows perform some math operations on ints or floats, whether to 
 It would be redundant to have nodes specifically for ints and floats - ideally, 'math nodes' should output a ```NUMBER``` type that can be converted to either INT or FLOAT, and 'number' inputs would really be typed as ```(INT,FLOAT,NUMBER)``` for easy use.
 
 1. Basic Math
-Examples: Add (variable inputs), Subtract (variable inputs), Multiply (variable inputs), Divide (variable inputs), Power, Floor, Ceiling, Round. List is not exhaustive; more basic operations can be added. Existing custom nodes that do this sort of thing should be looked at, to make sure core implementation supports desired features.
+
+    Examples: Add (variable inputs), Subtract (variable inputs), Multiply (variable inputs), Divide (variable inputs), Power, Floor, Ceiling, Round. List is not exhaustive; more basic operations can be added. Existing custom nodes that do this sort of thing should be looked at, to make sure core implementation supports desired features.
 
 2. Convert From Number
-Takes a NUMBER as input, and has two outputs: INT and FLOAT.
+
+   Takes a NUMBER as input, and has two outputs: INT and FLOAT.
 
 ## Drawbacks
 
