@@ -45,7 +45,7 @@ how they are supposed to be used.
 The node `SaveWEBM` already does a good amount of what is needed; it just needs to be redistributed to be handled by several nodes. The main idea is to use pyAv and/or pyffmpeg to implement each node as needed. At the time of writing, I have had some issues with pyAv while trying their examples, as seen [here](https://github.com/PyAV-Org/PyAV/discussions/1769). So the version used should be thoroughly tested.
 My current investigation into this topic is very limited and summarized [here](https://github.com/Immac/video_manipulation_with_python). Nevertheless, the `SaveWEBM` node serves as an excellent starting point for further development.
 
-Regarding the actual coding of the nodes, having a _generic mechanism_ for nodes to receive complete functions from their inputs would be a way to separately implement codecs, similar to how it's done with KSamplers. However, I believe it can be done even more _generic_. I have not studied the code extensively enough for a formal proposal, but that might soon be an RFC.
+Regarding the actual coding of the nodes, having a _generic mechanism_ for nodes to receive complete functions from their inputs would be a way to separately implement codecs, similar to how it's done with KSamplers. However, I believe it can be done even more _generic_. I have not studied the code extensively enough for a formal proposal.
 
 ## Drawbacks
 
