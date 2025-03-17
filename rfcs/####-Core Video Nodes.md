@@ -12,7 +12,7 @@ This RFC proposes the integration of fundamental video input and output function
 ## Basic example
 
 A basic example of the proposed Node usage:
-![alt text](rfcs/assets/####/workflow.svg)
+![alt text](assets/####/workflow.svg)
 
 ## Motivation
 
@@ -41,7 +41,7 @@ defined here.
 I have provided a [set of mock custom nodes](https://github.com/Immac/ComfyUI-CoreVideoMocks) that represent what I believe is a good starting point for this development. Please note that these are just mocks and thus connect to anything, so use the provided [workflow](https://github.com/Immac/ComfyUI-CoreVideoMocks/blob/master/Mock%20Video%20Workflows.json) to understand 
 how they are supposed to be used.
 
-![alt text](rfcs/assets/####/workflow.svg)
+![alt text](assets/####/workflow.svg)
 
 The node `SaveWEBM` already does a good amount of what is needed; it just needs to be redistributed to be handled by several nodes. The main idea is to use pyAv and/or pyffmpeg to implement each node as needed. At the time of writing, I have had some issues with pyAv while trying their examples, as seen [here](https://github.com/PyAV-Org/PyAV/discussions/1769). So the version used should be thoroughly tested.
 My current investigation into this topic is very limited and summarized [here](https://github.com/Immac/video_manipulation_with_python). Nevertheless, the `SaveWEBM` node serves as an excellent starting point for further development.
