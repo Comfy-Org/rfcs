@@ -62,7 +62,11 @@ While basic video processing is currently supported, as video generation needs i
 
 ## Adoption strategy
 
-It only adds new nodes, so there should be no conflicts with existing workflows, adding the nodes as BETA and giving them some time to be tested would be fine. 
+It only adds new nodes, so there should be no conflicts with existing workflows, adding the nodes as BETA and giving them some time to be tested would be fine.
+
+- Create the necessary nodes to go from video to video, no audio nor subtitles, add experimental flag to set as `BETA`
+- Create examples and documentation on intended usage
+- Gradually add the missing streams
 
 ## Miscellaneous
 
