@@ -1,7 +1,8 @@
 # RFC: LiteGraph Native Reroute
 
 - Start Date: 2025-01-12
-- Target Major Version: TBD
+- Target Major Version: Frontend 1.15
+- Implemented PR: https://github.com/Comfy-Org/ComfyUI_frontend/pull/3151
 - Reference Issues:
 
   - <https://github.com/Comfy-Org/litegraph.js/pull/301>
