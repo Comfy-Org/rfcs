@@ -1,7 +1,12 @@
 # RFC: Widget Input Socket
 
 - Start Date: 2025-01-13
-- Target Major Version: TBD
+- Target Major Version: Frontend v1.16
+- Implementation PRs:
+  
+  - https://github.com/Comfy-Org/ComfyUI_frontend/pull/3326
+  - https://github.com/Comfy-Org/litegraph.js/pull/891
+
 - Reference Issues:
 
   - <https://github.com/Comfy-Org/ComfyUI_frontend/pull/1021>
