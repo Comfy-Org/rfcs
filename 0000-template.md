@@ -163,7 +163,7 @@ Currently users are getting highly frustrated when they break their venv. Some i
 
 ## Adoption strategy
 
-I assume the adoption will happen organically. Power-users will notice the new .bat and slowly more and more users will now about this feature.
+I assume the adoption will happen organically. Power-users will notice the new .bat and slowly more and more users will know about this feature.
 
 ## Unresolved questions
 
