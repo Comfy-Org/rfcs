@@ -1,0 +1,21 @@
+[project]
+name = "comfyui-node" # unique namespace for the node pack
+version = "0.1.0"
+description = "ComfyUI Node that does"
+authors = [
+  {name = "", email = ""}
+]
+readme = "README.md"
+license = {file = "LICENSE"}
+dependencies = []
+
+[project.urls]
+bugs = ""
+homepage = ""
+repository = ""
+
+
+[tool.comfy]
+PublisherId = "" # Registry ID
+DisplayName = "" # Display Name for ComfyUI Registry
+Icon = "" # Icon URL for ComfyUI Registry
