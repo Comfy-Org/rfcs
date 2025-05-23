@@ -83,11 +83,11 @@ class Example:
         }
 
     RETURN_TYPES = ("IMAGE",)
-    #RETURN_NAMES = ("image_output_name",)
+    RETURN_NAMES = ("image_output_name",)
 
     FUNCTION = "test"
 
-    #OUTPUT_NODE = False
+    OUTPUT_NODE = False
 
     CATEGORY = "Example"
 
@@ -127,12 +127,12 @@ class Example:
         This method is used in the core repo for the LoadImage node where they return the image hash as a string, if the image hash
         changes between executions the LoadImage node is executed again.
     """
-    #@classmethod
-    #def IS_CHANGED(s, image, string_field, int_field, float_field, print_to_screen):
-    #    return ""
+    @classmethod
+    def IS_CHANGED(s, image, string_field, int_field, float_field, print_to_screen):
+       return ""
 
 # Set the web directory, any .js file in that directory will be loaded by the frontend as a frontend extension
-# WEB_DIRECTORY = "./somejs"
+WEB_DIRECTORY = "./somejs"
 
 
 # Add custom API routes, using router
