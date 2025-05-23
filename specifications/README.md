@@ -1,4 +1,4 @@
-# ComfyUI Current Manifest
+# ComfyUI Current Specifications
 
 This directory contains the current version of ComfyUI's manifest files and API definitions.
 
