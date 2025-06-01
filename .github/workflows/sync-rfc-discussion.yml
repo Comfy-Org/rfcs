@@ -1,0 +1,146 @@
+name: Sync RFC Discussion
+
+on:
+  pull_request_target:
+    types: [synchronize]
+    paths:
+      - 'rfcs/**.md'
+
+jobs:
+  sync-discussion:
+    runs-on: ubuntu-latest
+    permissions:
+      discussions: write
+      pull-requests: read
+    
+    steps:
+      - name: Get Changed Files
+        id: changed-files
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            
+            const mdFile = files.find(file => file.filename.startsWith('rfcs/') && file.filename.endsWith('.md'));
+            if (!mdFile) {
+              core.info('No RFC markdown file found, skipping sync');
+              return;
+            }
+            core.setOutput('filename', mdFile.filename);
+
+      - name: Get RFC Content
+        id: get-rfc-content
+        if: steps.changed-files.outputs.filename
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const mdFile = '${{ steps.changed-files.outputs.filename }}';
+            const { data: fileContent } = await github.rest.repos.getContent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path: mdFile,
+              ref: context.payload.pull_request.head.sha
+            });
+            
+            const content = Buffer.from(fileContent.content, 'base64').toString('utf8');
+            core.setOutput('content', content);
+
+      - name: Find Discussion
+        id: find-discussion
+        if: steps.changed-files.outputs.filename
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const query = `
+              query($owner: String!, $repo: String!, $searchTerm: String!) {
+                repository(owner: $owner, name: $repo) {
+                  discussions(first: 50, orderBy: {field: CREATED_AT, direction: DESC}) {
+                    nodes {
+                      id
+                      title
+                      body
+                    }
+                  }
+                }
+              }
+            `;
+            
+            const variables = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              searchTerm: `RFC Discussion: ${context.payload.pull_request.title}`
+            };
+            
+            const result = await github.graphql(query, variables);
+            const discussion = result.repository.discussions.nodes.find(d => 
+              d.title === `RFC Discussion: ${context.payload.pull_request.title}`
+            );
+            
+            if (discussion) {
+              core.setOutput('discussion_id', discussion.id);
+              core.info(`Found discussion: ${discussion.id}`);
+            } else {
+              core.info('Discussion not found');
+            }
+
+      - name: Update Discussion Content
+        if: steps.find-discussion.outputs.discussion_id && steps.changed-files.outputs.filename
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const discussionId = '${{ steps.find-discussion.outputs.discussion_id }}';
+            const rfcContent = `${{ steps.get-rfc-content.outputs.content }}`;
+            const mdFile = '${{ steps.changed-files.outputs.filename }}';
+            
+            const newBody = `# RFC Discussion: ${{ github.event.pull_request.title }}
+
+**Author:** @${{ github.event.pull_request.user.login }} | **Status:** 🟡 Under Review
+
+## 📋 Quick Links
+- 🔧 [Source PR #${{ github.event.pull_request.number }}](${{ github.event.pull_request.html_url }})
+- 📝 [View Changes](${{ github.event.pull_request.html_url }}/files)
+- 📖 [Rendered Proposal](https://github.com/${{ github.repository }}/blob/${{ github.event.pull_request.head.ref }}/${mdFile})
+
+---
+
+## 📄 Current Proposal
+
+> **Last Updated:** ${{ github.event.pull_request.updated_at }}  
+> **Commit:** [\`${{ github.event.pull_request.head.sha }}\`](${{ github.event.pull_request.head.repo.html_url }}/commit/${{ github.event.pull_request.head.sha }})
+
+<!-- RFC_CONTENT_START -->
+${rfcContent}
+<!-- RFC_CONTENT_END -->
+
+---
+**💬 Discussion Guidelines:** Share feedback, concerns, and suggestions below. Use reply threads to keep conversations organized.`;
+
+            const mutation = `
+              mutation($discussionId: ID!, $body: String!) {
+                updateDiscussion(input: {
+                  discussionId: $discussionId,
+                  body: $body
+                }) {
+                  discussion {
+                    id
+                    title
+                  }
+                }
+              }
+            `;
+            
+            const variables = {
+              discussionId: discussionId,
+              body: newBody
+            };
+            
+            try {
+              const result = await github.graphql(mutation, variables);
+              core.info(`Successfully updated discussion: ${result.updateDiscussion.discussion.id}`);
+            } catch (error) {
+              core.setFailed(`Failed to update discussion: ${error.message}`);
+            }
