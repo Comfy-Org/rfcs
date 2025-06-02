@@ -11,6 +11,8 @@ This is a **TEST RFC** to verify the enhanced discussion integration workflow. I
 
 **🔄 UPDATED**: This content has been modified to test the automatic discussion sync feature!
 
+**✅ SYNTAX FIX APPLIED**: Testing the workflow fix that prevents JavaScript syntax errors from special characters.
+
 ## Basic example
 
 ```javascript
@@ -41,6 +43,8 @@ This test will validate all these features work as expected.
 ### ✅ Testing Update Sync
 
 This section was added to verify that when we push changes to the RFC file, the GitHub discussion automatically updates to reflect the new content. The sync workflow should detect this change and update the discussion body with the modified RFC content.
+
+**🔧 Round 3 Testing**: This is the third test commit after applying the JavaScript syntax error fix. The workflow should now handle special characters like brackets `[test]`, apostrophes `GitHub's`, and any other content safely.
 
 ## Detailed design
 
