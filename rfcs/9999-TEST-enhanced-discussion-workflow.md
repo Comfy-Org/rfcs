@@ -9,6 +9,8 @@
 
 This is a **TEST RFC** to verify the enhanced discussion integration workflow. It should automatically create a rich discussion with full proposal content and demonstrate the sync capabilities when the RFC is updated.
 
+**🔄 UPDATED**: This content has been modified to test the automatic discussion sync feature!
+
 ## Basic example
 
 ```javascript
@@ -35,6 +37,10 @@ We need to test that:
 4. **Fork Compatibility**: Works with `pull_request_target` for fork contributions
 
 This test will validate all these features work as expected.
+
+### ✅ Testing Update Sync
+
+This section was added to verify that when we push changes to the RFC file, the GitHub discussion automatically updates to reflect the new content. The sync workflow should detect this change and update the discussion body with the modified RFC content.
 
 ## Detailed design
 
