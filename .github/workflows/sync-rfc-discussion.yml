@@ -93,7 +93,7 @@ jobs:
         with:
           script: |
             const discussionId = '${{ steps.find-discussion.outputs.discussion_id }}';
-            const rfcContent = `${{ steps.get-rfc-content.outputs.content }}`;
+            const rfcContent = '${{ steps.get-rfc-content.outputs.content }}';
             const mdFile = '${{ steps.changed-files.outputs.filename }}';
             
             const newBody = `# RFC Discussion: ${{ github.event.pull_request.title }}
