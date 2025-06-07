@@ -1,7 +1,7 @@
 # RFC: Subgraph
 
 - Start Date: 2025-01-12
-- Target Major Version: TBD
+- Target Major Version: Frontend 1.22
 - Reference Issues:
   - https://github.com/Comfy-Org/ComfyUI_frontend/issues/1077
   - https://github.com/comfyanonymous/ComfyUI/issues/5353
@@ -202,7 +202,7 @@ interface ExposedWidget {
 }
 ```
 
-NB: Can be easily adapted to match current pending RFC 02 and/or RFC 04 specifications. RFC 04 in particular would drastically simplify some implementation details and provide unified UX. Caveat is that it would prevent 
+NB: Can be easily adapted to match current pending RFC 02 and/or RFC 04 specifications. RFC 04 in particular would drastically simplify some implementation details and provide unified UX. Caveat is that it would prevent
 
 ### Examples
 
