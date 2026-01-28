@@ -16,11 +16,11 @@ ComfyUI provides [data lists](https://docs.comfy.org/custom-nodes/backend/lists)
 
 ### Simple example
 
-In the following example, the node `String OutputList` is marked as `OUTPUT_IS_LIST=True` (a data list) and tells `KSampler` to fetch and process the items sequentially:
+In the following example, the node `String OutputList` is marked as `OUTPUT_IS_LIST=True` (a data list) and tells `KSampler` to fetch and process the items sequentially. Notice how the `KSampler` executes 4 times:
 
 https://github.com/user-attachments/assets/6bb38b4c-f00e-4636-8d23-277be547de18
 
-This works well for small workflows but with larger and more advanced workflows the execution remains at one node for a very long time and also potentially builds up memory usage.
+I built a whole node pack around this useful but underutilized feature and it is very well received. It allows easy and native multi-prompt workflows, but again and again, users hit roadblocks because it only works well for small workflows but with larger and more advanced workflows the execution remains at one node for a very long time and also potentially builds up memory usage and OOM.
 
 ### XYZ-GridPlots
 
@@ -36,7 +36,7 @@ We often want to iterate over a list of models to compare how different checkpoi
 
 <img width="2350" height="736" alt="Image" src="https://github.com/user-attachments/assets/8a5b85b6-cf54-40e1-8336-ce20c71d34c1" />
 
-In this example the node `Load Checkpoint` will load ALL checkpoints first before proceeding which eventually leads to OOM.
+In this example the node `Load Checkpoint` will load ALL checkpoints upfront before proceeding, which eventually leads to OOM.
 
 ### Bake parameters into workflow
 
@@ -48,58 +48,69 @@ In this example the node `FormattedString` makes use of `extra_pnginfo` in the s
 
 ### Multi-model workflows
 
-Another usecase to consider are multi-model workflows. Let's say we have a list of prompts and want to process them in a powerful "generate image -> generate video -> upscale video" pipeline, but only one step will ever fit into VRAM. Thus we want to do something like "load image model -> generate ALL images -> unload image model -> load video model -> generate ALL videos -> unload video model -> upscale ALL videos". So in this case we need some control over how the multi-processing should work.
+Another usecase to consider are multi-model workflows. Let's say we have a list of prompts and want to process them in a powerful "iterate prompts -> generate image -> generate video -> upscale video" pipeline, but only one step will ever fit into VRAM. Thus we want to do something like "load image model -> generate ALL images -> unload image model -> load video model -> generate ALL videos -> unload video model -> upscale ALL videos". So this actually a counter-example because in this case we want the process the same node multiple times and thus we need some control over how the multi-processing should work in different use-cases.
 
 ## Detailed design
 
 > This is the bulk of the RFC. Explain the design in enough detail for somebody familiar with Vue to understand, and for somebody familiar with the implementation to implement. This should get into specifics and corner-cases, and include examples of how the feature is used. Any new terminology should be defined here.
 
-I'm not a core developer and cannot provide implementation details, only describe how it would appear to the user. Please note that "node expansion" already provides some features and is discussed in Alternative Solution below!
+I'm not a core developer and cannot provide implementation details, only describe how it would appear to the user. Please note that "node expansion" already provides some features and is discussed in "Alternative Solutions" below!
 
-### Solution 1 - Pass on execution immediately
+### Change 1 - Pass on execution immediately
 
-I would argue that all the examples except "Multi-model workflows" are the more common case and "Multi-model workflow" is very special and advanced. As such, the default behaviour should be to **pass on execution immediately instead of processing the same node multiple times at once**. Thus in the case of "multi-model workflow" a change in execution mode would only concern the `KSampler` and we need an option  "for this node only, process all items multiple times at once." (That is, unless the user also wants to see intermediate results before unloading the model.)
+The first change I propose is to change the execution scheme to **pass on execution immediately after each result instead of processing the same node multiple times at once**.
 
-But whatever the default case is, there has to be a way to change execution mode, either for one node or a group of nodes.
+I would argue that all the examples above except "Multi-model workflows" are the more common case and "Multi-model workflow" is very special and advanced. The default behaviour should cover the more common and simple cases, because advanced workflows are designed by advanced users anyway, who know what to do. And secondly, then it doesn't require "Change 4 - Passthrough inputs for ALL output nodes".
 
-### Solution 2 - Control execution for a single node
+The next two proposed changes concern how the execution mode can be changed for single nodes and group of nodes. If "pass on execution immediately" is the default execution mode, all the simple examples would work out-of-the-box and only the "multi-model workflows" would require a configuration on 2 single KSamplers to work. If we don't change it, all the simple examples would require a configuration on a GROUP of nodes.
 
-The other point to discuss would be - whether or not the default execution mode is actually changed - HOW we set a single node or group of nodes to the other execution mode. The single node case is trivial, just add a context menu entry and some visual that the node uses a different execution mode.
+But whatever the default case is, there has to be a way to change execution mode, either for one node or a group of nodes. This is discussed in the next two proposed changes.
 
-### Solution 3 - Control execution for a group of nodes
+### Change 2 - Control execution for a single node
 
-**a) Subgraphs**
+The other point to discuss would be - whether or not the default execution scheme is actually changed - HOW we set a single node or group of nodes to the other execution mode. The single node case is trivial, just add a context menu entry and some icon that the node uses a different execution mode.
+
+### Change 3 - Control execution for a group of nodes
+
+For a group of nodes the change is more complicated because we have to have a way to define which nodes are covered and a visual to see which nodes are effected. The following discusses different options on how the execution mode can be changed for a group of nodes:
+
+#### Option a) Subgraphs
 
 Add an option for subgraph "treat as sequential unit".
 
 <img width="806" height="304" alt="Image" src="https://github.com/user-attachments/assets/370a92bd-95df-44e3-beef-30e16132a476" />
 
 - Pro: Subgraphs already covers the concept of groups
-- Con: Requires hierachical treatment of data lists, otherwise subgraphs would work differently if they are executed as a standalone workflow. Let's say there is output list outside of the subgraph, then the whole subgraph executes as whole on this item. If there is another output list within the subgraph, the behaviour should work like data lists work now (but what if different hierarchical layers are intertwined?).
+- Con: Requires hierachical treatment of data lists, otherwise subgraphs would work differently if they are executed as a standalone workflow. Let's say there is output list outside of the subgraph, then the whole subgraph executes as a whole on this item. If there is another output list within the subgraph, the behaviour should work like data lists work now (but what if different hierarchical layers are intertwined?).
 
-**b) Add Group (box)**
+#### Option b) Add Group (box)
 
-When the box is set as "sequential unit" all nodes within the box execute immediately.
+When the box is set as "sequential unit" all nodes within the box execute differently (the actual UI should be different of course, like a context menu entry and a icon which visualizes the change)
 
 <img width="648" height="340" alt="Image" src="https://github.com/user-attachments/assets/d8bef0e7-120e-4722-8438-4d75b4e76eb5" />
 
-- Pro: easy to mark 
+- Pro: easy to mark
 - Con: could lead to ambiguous situations when only half of a graph flow is marked
 
-**c) onExecuted/onTrigger**
+#### Option c) onExecuted/onTrigger
 
-I don't know what the original intention for this feature was but it could be used to the tell `KSampler`: "after you have executed, trigger this `SaveImage` node immediately.. which then looks upstream until it finds the `KSampler` and fetches the item downstream. It only needs to be actually implemented.
+I don't know what the original intention for this feature was and I don't really understand it but it could be used to the tell `KSampler`: "after you have executed, trigger this `SaveImage` node immediately".. which then looks upstream until it finds the `KSampler` and fetches the item downstream. It only needs to be actually implemented.
 
 <img width="853" height="378" alt="Image" src="https://github.com/user-attachments/assets/32447fd0-4693-479c-90ef-99c8af312657" />
 
 - Pro: it somewhat already allows to control execution, so maybe this RFC is just an argument to finally implement it
 - Con: has to be implemented first
 
-comfyanonymous/ComfyUI#704
-comfyanonymous/ComfyUI#1135
-comfyanonymous/ComfyUI#7443 (I tried it here: https://github.com/comfyanonymous/ComfyUI/pull/7443#issuecomment-3592346229)
+Also see:
+* comfyanonymous/ComfyUI#704
+* comfyanonymous/ComfyUI#1135
+* comfyanonymous/ComfyUI#7443
 
-**d) Group nodes**
+There is a PR which implemented this and I tried it here: https://github.com/comfyanonymous/ComfyUI/pull/7443#issuecomment-3592346229 but it didn't work. Maybe all it takes is that onExecuted fires on every item.
+
+And would this work with the example "Iterate models"? e.g. "load 'checkpoint 1' onExecuted -> trigger unload 'checkpoint 1', then proceed with 'checkpoint 2'". Or would the caching strategy already cover the unloading of checkpoint 1 after usage?
+
+#### Option d) Group nodes
 
 (Just for completeness sake, not seriously considered)
 
@@ -108,17 +119,32 @@ comfyanonymous/ComfyUI#7443 (I tried it here: https://github.com/comfyanonymous/
 - Pro: same as subgraph
 - Con: Groups have been deprecated
 
+### Change 4 - Passthrough inputs for ALL output nodes
+
+The following change is only required, if the execution scheme stays as it is. It is almost possible to display the intermediate results with for-loops already, except that output nodes would need to passthrough the inputs as an output knob, in order for the for-loop to consider the node as a part of the node expansion (see "Alternatives - node expansion at runtime").
+
 ## Drawbacks
 
 > Why should we *not* do this? Please consider:
 
 > - implementation cost, both in term of code size and complexity
 
-I don't know. From an execution point of view it would execute the same node multiple times. So this could be effected by Muting/Bypassing and any flow-control nodes. And all output nodes which support image lists: Save Image or Preview Image would populate the list one by one (or at least save one by one if we don't care about the presentation).
+I don't know. From an execution point of view the processing would jump around in the graph back and forth multiple times:
+a) single diffusion workflow: executes the same as now
+b) multiple inputs (from a data list) into a single diffusion workflow: fetch one item, execute the whole graph, then jump back to the input list, fetch the next item, repeat. the output node (Save Image) is populated one-by-one.
+c) multiple inputs with a node that has `INPUT_IS_LIST=true`: same as `b` except all results are collected in this node before proceeding downstream
+d) multiple inputs with a `KSampler` that is set to `execute multiple times` (see "multi-model workflow"): same as c except all the results are collected in the KSampler before proceeding downstream
+
+So maybe this could effect:
+1. Muting/Bypassing and any flow-control nodes
+2. All output nodes which support image lists: Save Image or Preview Image would populate the list one by one (or at least save one by one if we don't care about the visual presentation).
+3. Caches would build up differently and probably need different optimization strategies if the executor knows that a part of a graph won't be executed anymore.
+
+On the other hand, it already works with node expansion, so everything should work out-of-the-box already?
 
 > - whether the proposed feature can be implemented in user space
 
-Yes, see "ad-hoc node expansion" but this solution is ambigious and has some drawbacks.
+Yes, see "ad-hoc node expansion" but this solution is either complicated or ambigious, and has some drawbacks.
 
 > - the impact on teaching people ComfyUI
 > - cost of migrating existing ComfyUI applications (is it a breaking change?)
@@ -137,9 +163,9 @@ has been discussed
 
 > What other designs have been considered?
 
-**a) custom node expansion**
+### a) custom node expansion
 
-The only solution so far I've found is to copy the node pattern `KSampler > VAE Decode > Save Image` as a custom node with node expansion in code:
+The only solution so far I've found is to copy the node pattern, e.g. `KSampler > VAE Decode > Save Image`, as a custom node with node expansion in code:
 
 <img width="2490" height="748" alt="Image" src="https://github.com/user-attachments/assets/1be7d128-8c74-4087-b106-24e378c96c7f" />
 
@@ -154,18 +180,18 @@ This is useful if you want to save the intermediate images for grids immediately
 		return {
 			"required": {
 				# from ComfyUI/nodes.py KSampler
-				"model"       	: ("MODEL"       	, { "tooltip" : "The model used for denoising the input latent." } ) ,
-				"positive"    	: ("CONDITIONING"	, { "tooltip" : "The conditioning describing the attributes you want to include in the image." } ) ,
-				"negative"    	: ("CONDITIONING"	, { "tooltip" : "The conditioning describing the attributes you want to exclude from the image." } ) ,
-				"latent_image"	: ("LATENT"      	, { "tooltip" : "The latent image to denoise." } ) ,
-				"vae"         	: ("VAE"         	, { "tooltip" : "The VAE model used for decoding the latent." } ) ,
+				"model"	: ("MODEL"	, { "tooltip" : "The model used for denoising the input latent." } ) ,
+				"positive"	: ("CONDITIONING"	, { "tooltip" : "The conditioning describing the attributes you want to include in the image." } ) ,
+				"negative"	: ("CONDITIONING"	, { "tooltip" : "The conditioning describing the attributes you want to exclude from the image." } ) ,
+				"latent_image"	: ("LATENT"	, { "tooltip" : "The latent image to denoise." } ) ,
+				"vae"	: ("VAE"	, { "tooltip" : "The VAE model used for decoding the latent." } ) ,
 
-				"seed"        	: ("INT"                             	, {"default" : 	0  	, "min" :	0  	, "max" :	0xfffffffffffffff  	, "control_after_generate" : True,	"tooltip" : "The random seed used for creating the noise." } ) ,
-				"steps"       	: ("INT"                             	, {"default" :	20  	, "min" :	1  	, "max" :            	10000  	,                                 	"tooltip" : "The number of steps used in the denoising process." } ) ,
-				"cfg"         	: ("FLOAT"                           	, {"default" : 	8.0	, "min" :	0.0	, "max" :              	100.0	, "step" : 0.1, "round" : 0.01,   	"tooltip" : "The Classifier-Free Guidance scale balances creativity and adherence to the prompt. Higher values result in images more closely matching the prompt however too high values will negatively impact quality." } ) ,
-				"sampler_name"	: (comfy.samplers.KSampler.SAMPLERS  	, {"tooltip" : "The algorithm used when sampling , this can affect the quality , speed , and style of the generated output." } ) ,
-				"scheduler"   	: (comfy.samplers.KSampler.SCHEDULERS	, {"tooltip" : "The scheduler controls how noise is gradually removed to form the image." } ) ,
-				"denoise"     	: ("FLOAT"                           	, {"default" :	1.0	, "min" :	0.0	, "max" :	1.0	, "step" : 0.01,	"tooltip" : "The amount of denoising applied , lower values will maintain the structure of the initial image allowing for image to image sampling." } ) ,
+				"seed"	: ("INT"	, {"default" :	0	, "min" :	0	, "max" :	0xfffffffffffffff	, "control_after_generate" : True,	"tooltip" : "The random seed used for creating the noise." } ) ,
+				"steps"	: ("INT"	, {"default" :	20	, "min" :	1	, "max" :	10000	,	"tooltip" : "The number of steps used in the denoising process." } ) ,
+				"cfg"	: ("FLOAT"	, {"default" :	8.0	, "min" :	0.0	, "max" :	100.0	, "step" : 0.1, "round" : 0.01,	"tooltip" : "The Classifier-Free Guidance scale balances creativity and adherence to the prompt. Higher values result in images more closely matching the prompt however too high values will negatively impact quality." } ) ,
+				"sampler_name"	: (comfy.samplers.KSampler.SAMPLERS	, {"tooltip" : "The algorithm used when sampling , this can affect the quality , speed , and style of the generated output." } ) ,
+				"scheduler"	: (comfy.samplers.KSampler.SCHEDULERS	, {"tooltip" : "The scheduler controls how noise is gradually removed to form the image." } ) ,
+				"denoise"	: ("FLOAT"	, {"default" :	1.0	, "min" :	0.0	, "max" :	1.0	, "step" : 0.01,	"tooltip" : "The amount of denoising applied , lower values will maintain the structure of the initial image allowing for image to image sampling." } ) ,
 
 				# from ComfyUI/nodes.py SaveImage
 				"filename_prefix"	: ("STRING", {"default" : "ComfyUI", "tooltip" : "The prefix for the file to save. This may include formatting information such as %date :yyyy-MM-dd% or %Empty Latent Image.width% to include values from nodes."}),
@@ -175,18 +201,18 @@ This is useful if you want to save the intermediate images for grids immediately
 			# },
 		}
 
-	RETURN_NAMES   	= ("image", )
-	RETURN_TYPES   	= ("IMAGE", )
+	RETURN_NAMES	= ("image", )
+	RETURN_TYPES	= ("IMAGE", )
 	OUTPUT_TOOLTIPS	= ("The decoded image.",) # from ComfyUI/nodes.py VAEDecode
-	OUTPUT_NODE    	= True
-	FUNCTION       	= "execute"
-	CATEGORY       	= "_for_testing"
+	OUTPUT_NODE	= True
+	FUNCTION	= "execute"
+	CATEGORY	= "_for_testing"
 
 	def execute(self, model, positive, negative, latent_image, vae, seed, steps, cfg, sampler_name, scheduler, denoise, filename_prefix):
-		graph 	= GraphBuilder()
+		graph	= GraphBuilder()
 		latent	= graph.node("KSampler" , model=model, positive=positive, negative=negative, latent_image=latent_image, seed=seed, steps=steps, cfg=cfg, sampler_name=sampler_name, scheduler=scheduler, denoise=denoise)
 		images	= graph.node("VAEDecode", samples=latent.out(0), vae=vae)
-		save  	= graph.node("SaveImage", images=images.out(0), filename_prefix=filename_prefix)
+		save	= graph.node("SaveImage", images=images.out(0), filename_prefix=filename_prefix)
 		return {
 			"result" : (images.out(0),),
 			"expand" : graph.finalize(),
@@ -199,30 +225,27 @@ While this works with the default pattern in the simple example, it would requir
 * You want to include the Load Checkpoint for model iteration? New custom node
 etc.
 
-**b) ad-hoc node expansion in editor**
+And you have to implement this in code and restart the server for every change.
 
-Because node expansion already works we could provide a feature "create node-expansion from selected nodes" which generates the node expansion code and just provides a custom node which is only valid within this workflow.
+### b) ad-hoc node expansion in editor
 
-**c) ad-hoc node expansion in runtime**
+Because node expansion already works we could provide a feature "create node-expansion from selected nodes" which simply generates the node expansion code and provides it as a custom node (or blueprint or something). This could be implemented as a plugin or new feature.
 
-Another solution could be to create an ad-hoc node expansion based on the connected nodes (the following is just an draft, I didn't implement this for real):
+### c) node expansion at runtime
 
-<img width="1056" height="437" alt="Image" src="https://github.com/user-attachments/assets/c9828277-3479-40fd-8fbd-403f263d0b2a" />
+Another solution to show the intermediate results that ALMOST works is "node expansion at runtime" a.k.a for-loops.
 
-`SequentialUnitStart` is located between the OutputList and the `KSampler` and just passes the item through. `SequentialUnitEnd` is located after the output node `SaveImage` and passes the value trough downstream. When the prompt is executed, look up the connected starting node (`KSampler`), the connected end node (`SaveImage`) and find the linked graph and nodes in-between, copy all the nodes as a node expansion, set the original nodes as "muted", and execute the original behaviour on the node expansion.
+<img width="1258" height="854" alt="image" src="https://github.com/user-attachments/assets/0f13c81c-2bbd-4522-9e92-afc22fc1a812" />
 
-Cons:
-1. this is very tedious to setup as a user.
-2. it is not clear were the starting node should be (right after the `OUTPUT_IS_LIST=True` (here: `String OutputList`), or is it okay if it's further downstream (here: `TextEncode`). what if there are multiple output lists connected to the `KSampler`?
-3. `SaveImage` only has an input knob, so `SequentialUnitEnd` needs to connect to the input, but then no else can connect to it. If `SequentialUnitEnd` is connected before `SaveImage` then intuitively it looks as if `SaveImage` is excluded from the sequential unit. If it should look as if it's inside the unit, it must provide an output knob, which `SaveImage` does not (hence the custom `SaveImage2` in this example).
-4. we could forego linking completely and just work with node ids. but this is even more tedious, error prone and makes no sense in ComfyUI.
+(workflow created by @Levelleor https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner/pull/33#issuecomment-3805656039)
 
-**d) The PrimitiveInt control_after_generate=increment pattern**
+I don't know how exactly for-loops work in ComfyUI, but it probably defines a start and end point, then searches for a path through the links, selects all the nodes involved and instantiates a copy of them via node expansion for every list item. The problem why this doesn't work is because every output node would need to passthrough their input in order to be considered a part of the node expansion, hence why their is a custom `Save Image Passthrough` node in this example. This could probably be fixed by adding a "and also include this output node"-knob to the for-loop but then the user's brain would explode. No one (NO ONE!) knows how for-loops actually work or how they are used, including the custom node developers themselves. So this not really a solution either.
 
-A well known pattern to emulate multi processing is the `Primitive Int` node with `control_after_generate=increment`. You basically get a counter that increases everytime you run a prompt. When you hook it up as a index in a list selector node, it iterates over entries across multiple prompts. In the Run toolbox you can set the amount of prompts to the number of items in your list to iterate the whole list. This pattern essentially cancels out the effect of output lists and will only ever process one item at a time.
+### d) The PrimitiveInt control_after_generate=increment pattern
+
+A well known pattern to emulate multi-processing is the `Primitive Int` node with `control_after_generate=increment`. You basically get a counter that increases everytime you run a prompt. When you hook it up as a index in a list selector node, it iterates over entries across multiple prompts. In the Run toolbox you can set the amount of prompts to the number of items in your list to iterate the whole list. This pattern essentially cancels out the effect of output lists and will only ever process one item at a time.
 
 <img width="1056" height="437" alt="Image" src="https://raw.githubusercontent.com/geroldmeisinger/ComfyUI-outputlists-combiner/main/media/PrimitiveIntControlAfterGenerateIncrement.png" />
-
 
 > What is the impact of not doing this?
 
@@ -238,3 +261,6 @@ I don't see data lists wildly used right now although they should be as they are
 
 > Optional, but suggested for first drafts. What parts of the design are still TBD?
 
+### onExecuted/onTrigger
+
+I don't know how they work, maybe this is the solution already, but there is no documentation and they are not implemented yet. Maybe all it takes is that onExecuted fires for every item.
