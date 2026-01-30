@@ -235,11 +235,13 @@ Because node expansion already works we could provide a feature "create node-exp
 
 Another solution to show the intermediate results that ALMOST works is "node expansion at runtime" a.k.a for-loops.
 
-<img width="1258" height="854" alt="image" src="https://github.com/user-attachments/assets/0f13c81c-2bbd-4522-9e92-afc22fc1a812" />
-
-(workflow created by @Levelleor https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner/pull/33#issuecomment-3805656039)
+<img width="4044" height="1518" alt="ExampleAdv_08_ForLoops" src="https://github.com/user-attachments/assets/fc08bd59-c92c-4d0d-abaf-09b2a6cd1f45" />
 
 I don't know how exactly for-loops work in ComfyUI, but it probably defines a start and end point, then searches for a path through the links, selects all the nodes involved and instantiates a copy of them via node expansion for every list item. The problem why this doesn't work is because every output node would need to passthrough their input in order to be considered a part of the node expansion, hence why their is a custom `Save Image Passthrough` node in this example. This could probably be fixed by adding a "and also include this output node"-knob to the for-loop but then the user's brain would explode. No one (NO ONE!) knows how for-loops actually work or how they are used, including the custom node developers themselves. So this not really a solution either.
+
+Related discussion:
+* https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner/pull/33
+* https://github.com/BadCafeCode/execution-inversion-demo-comfyui/issues/10
 
 ### d) The PrimitiveInt control_after_generate=increment pattern
 
